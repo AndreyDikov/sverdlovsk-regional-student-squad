@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GradleMigrationSettings" migrationVersion="1" />
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <compositeConfiguration>
+          <compositeBuild compositeDefinitionSource="SCRIPT">
+            <builds>
+              <build path="$PROJECT_DIR$/configuration-microservice" name="configuration-microservice">
+                <projects>
+                  <project path="$PROJECT_DIR$/configuration-microservice" />
+                </projects>
+              </build>
+              <build path="$PROJECT_DIR$/converters-module" name="converters-module">
+                <projects>
+                  <project path="$PROJECT_DIR$/converters-module" />
+                </projects>
+              </build>
+              <build path="$PROJECT_DIR$/entities-module" name="entities-module">
+                <projects>
+                  <project path="$PROJECT_DIR$/entities-module" />
+                </projects>
+              </build>
+              <build path="$PROJECT_DIR$/event-microservice" name="event-microservice">
+                <projects>
+                  <project path="$PROJECT_DIR$/event-microservice" />
+                </projects>
+              </build>
+              <build path="$PROJECT_DIR$/gateway-microservice" name="gateway-microservice">
+                <projects>
+                  <project path="$PROJECT_DIR$/gateway-microservice" />
+                </projects>
+              </build>
+              <build path="$PROJECT_DIR$/notification-microservice" name="notification-microservice">
+                <projects>
+                  <project path="$PROJECT_DIR$/notification-microservice" />
+                </projects>
+              </build>
+              <build path="$PROJECT_DIR$/server-microservice" name="server-microservice">
+                <projects>
+                  <project path="$PROJECT_DIR$/server-microservice" />
+                </projects>
+              </build>
+              <build path="$PROJECT_DIR$/user-microservice" name="user-microservice">
+                <projects>
+                  <project path="$PROJECT_DIR$/user-microservice" />
+                </projects>
+              </build>
+            </builds>
+          </compositeBuild>
+        </compositeConfiguration>
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="gradleHome" value="" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/configuration-microservice" />
+            <option value="$PROJECT_DIR$/converters-module" />
+            <option value="$PROJECT_DIR$/entities-module" />
+            <option value="$PROJECT_DIR$/event-microservice" />
+            <option value="$PROJECT_DIR$/gateway-microservice" />
+            <option value="$PROJECT_DIR$/notification-microservice" />
+            <option value="$PROJECT_DIR$/server-microservice" />
+            <option value="$PROJECT_DIR$/user-microservice" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/configuration-microservice" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/configuration-microservice" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/converters-module" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/converters-module" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/entities-module" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/entities-module" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/event-microservice" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/event-microservice" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/gateway-microservice" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/gateway-microservice" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/notification-microservice" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/notification-microservice" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/server-microservice" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/server-microservice" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/user-microservice" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/user-microservice" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+    </option>
+  </component>
+</project>

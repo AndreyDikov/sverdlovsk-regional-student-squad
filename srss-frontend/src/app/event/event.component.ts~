@@ -1,0 +1,317 @@
+import {Component, OnDestroy, OnInit} from '@angular/core';
+import {debounceTime, distinctUntilChanged, Observable, Subscription} from 'rxjs';
+import {RefreshService} from '../services/refresh.service';
+import {FullUser} from '../dto/FullUser';
+import {CategoryEvaluationMethod} from '../dto/CategoryEvaluationMethod';
+import {User} from '../dto/User';
+import {UserService} from '../services/user.service';
+import {environment} from '../../environments/environment';
+import {EventService} from '../services/event.service';
+import {ActivatedRoute, ParamMap, Router} from '@angular/router';
+import {Event} from '../dto/Event';
+import {Title} from '@angular/platform-browser';
+import {UserEvent} from '../dto/UserEvent';
+import {SquadService} from '../services/squad.service';
+import {Squad} from '../dto/Squad';
+import {hasRole} from '../functions/hasRoleFunction';
+import {AbstractControl, FormBuilder, FormControl, FormGroup, ValidationErrors, Validators} from '@angular/forms';
+import {Category} from '../dto/Category';
+import {EVALUATION_METHOD_LABELS, EvaluationMethod} from '../enums/EvaluationMethod';
+import {isPast} from '../functions/isPastFunction';
+import {EventWeight} from '../dto/EventWeight';
+
+@Component({
+  selector: 'app-event',
+  templateUrl: './event.component.html',
+  styleUrls: ['./event.component.css']
+})
+export class EventComponent implements OnInit, OnDestroy {
+  private sub = new Subscription();
+  readonly environment = environment;
+  protected readonly hasRole = hasRole;
+  protected readonly isPast = isPast;
+  protected readonly evaluationMethods = EVALUATION_METHOD_LABELS;
+
+  user$: Observable<User | null> = this.userService.user$;
+  currentUserUuid: string | null = null;
+
+  event!: Event;
+  author!: FullUser;
+  members = new Map<string, FullUser>();
+  usersEvent: UserEvent[] = [];
+  categoryEvaluationMethod!: CategoryEvaluationMethod;
+  mySquadMembers: FullUser[] = [];
+  categories: Category[] = [];
+  eventWeights: EventWeight[] = [];
+  form: FormGroup;
+  allowedMethods: EvaluationMethod[] = [];
+
+  isEditing = false;
+
+  // Карта FormControl для MAN_HOURS
+  userScoreControls: Map<string, FormControl> = new Map();
+
+  constructor(
+    private refreshService: RefreshService,
+    private userService: UserService,
+    private eventService: EventService,
+    private route: ActivatedRoute,
+    private titleService: Title,
+    private fb: FormBuilder,
+    private squadService: SquadService,
+    private routers: Router
+  ) {
+    this.form = this.fb.group({
+      name: ['', Validators.required],
+      description: [''],
+      place: [''],
+      startAt: [null, Validators.required],
+      endAt: [null, Validators.required],
+      categoryUuid: [null, Validators.required],
+      evaluationMethod: [null, Validators.required]
+    }, { validators: [this.dateRangeValidator] });
+  }
+
+  ngOnInit(): void {
+    this.sub.add(this.user$.subscribe(u => this.currentUserUuid = u?.uuid || null));
+    this.loadData();
+    this.sub.add(this.refreshService.refresh$.subscribe(() => this.loadData()));
+  }
+
+  ngOnDestroy(): void {
+    this.sub.unsubscribe();
+  }
+
+  private loadData(): void {
+    // Загрузка моей команды
+    this.squadService.getMySquad().subscribe((s: Squad) => {
+      this.userService.getUsersBySquadUuid(s.uuid).subscribe(u => this.mySquadMembers = u);
+    });
+
+    // Загрузка всех категорий
+    this.eventService.getAllCategories().subscribe((c: Category[]) => {
+      this.categories = c;
+    });
+
+    // Параметр маршрута → uuid события
+    this.route.paramMap.subscribe((pm: ParamMap) => {
+      const uuid = pm.get('uuid');
+      if (!uuid) {
+        return;
+      }
+
+      // Запрос самого события
+      this.eventService.getEventByUuid(uuid).subscribe((event: Event) => {
+        this.event = event;
+        this.titleService.setTitle(event.name);
+
+        // Заполняем форму
+        this.form.get('name')!.setValue(event.name);
+        this.form.get('description')!.setValue(event.description);
+        this.form.get('startAt')!.setValue(event.startAt);
+        this.form.get('endAt')!.setValue(event.endAt);
+        this.form.get('place')!.setValue(event.place);
+
+        // Загрузка данных об авторе
+        this.userService.getFullUserDataByUuid(event.authorUuid).subscribe(a => this.author = a);
+
+        // Загрузка списка пользователей, записанных на событие
+        this.eventService.getAllUsersEventsByEventUuid(uuid).subscribe(ueList => {
+          this.usersEvent = ueList;
+          this.members.clear();
+          ueList.forEach(ue => {
+            this.userService.getFullUserDataByUuid(ue.userUuid)
+              .subscribe(u => this.members.set(ue.userUuid, u));
+          });
+
+          // После загрузки usersEvent мы можем инициализировать контролы,
+          // но реальные значения появятся после загрузки eventWeights
+          this.initializeScoreControls();
+        });
+
+        // Загрузка метода оценки для категории события
+        this.eventService.getCategoryEvaluationMethodByUuid(event.categoryEvaluationMethodUuid)
+          .subscribe(cem => {
+            this.categoryEvaluationMethod = cem;
+
+            if (this.categories.length) {
+              this.form.get('categoryUuid')!.setValue(cem.category.uuid);
+            }
+
+            // Загрузка весов для выбранного метода
+            this.eventService.getEventWeightsByCategoryEvaluationMethodUuid(cem.uuid).subscribe((weights: EventWeight[]) => {
+              this.eventWeights = weights;
+
+              // После того как получили eventWeights, инициализируем контролы повторно
+              this.initializeScoreControls();
+            });
+          });
+
+        // Реагируем на смену категории
+        this.sub.add(
+          this.form.get('categoryUuid')!.valueChanges.subscribe(categoryUuid => {
+            const cat = this.categories.find(c => c.uuid === categoryUuid);
+            if (!cat) {
+              return;
+            }
+
+            let methods: EvaluationMethod[] = [];
+            if (['Спорт', 'Творческая работа'].includes(cat.name)) {
+              methods = [EvaluationMethod.PLACES];
+            } else if (['Социальная работа', 'Производственная работа'].includes(cat.name)) {
+              methods = [EvaluationMethod.MAN_HOURS];
+            } else if (cat.name.startsWith('Участие в мероприятиях')) {
+              methods = [EvaluationMethod.PLACES, EvaluationMethod.ATTENDANCE];
+            }
+
+            this.allowedMethods = methods;
+
+            if (methods.length === 1) {
+              this.form.get('evaluationMethod')!.setValue(methods[0]);
+            } else if (methods.length > 1) {
+              this.form.get('evaluationMethod')!.setValue(this.categoryEvaluationMethod.evaluationMethod);
+            }
+          })
+        );
+      });
+    });
+  }
+
+  // Инициализация FormControl для MAN_HOURS:
+  // создаём только если одновременно есть usersEvent И eventWeights И метод MAN_HOURS
+  private initializeScoreControls(): void {
+    if (
+      !this.usersEvent.length ||
+      !this.eventWeights.length ||
+      this.categoryEvaluationMethod.evaluationMethod !== EvaluationMethod.MAN_HOURS
+    ) {
+      return;
+    }
+
+    this.userScoreControls.clear();
+
+    // Берём «эталонный» вес: в этой реализации — первый EventWeight
+    const baseWeight: number = this.eventWeights[0]?.weight || 1;
+    const baseWeightUuid: string | null = this.eventWeights[0]?.uuid || null;
+
+    this.usersEvent.forEach(ue => {
+      // Если у пользователя уже есть оценка (ue.score),
+      // делим её на weight, чтобы получить часы:
+      const initialHours = ue.userScore != null
+        ? Math.floor(ue.userScore / baseWeight)
+        : 0;
+
+      const control = new FormControl(initialHours, [
+        Validators.required,
+        Validators.pattern(/^\d+$/) // только целые числа >= 0
+      ]);
+
+      this.userScoreControls.set(ue.uuid, control);
+
+      control.valueChanges
+        .pipe(debounceTime(1000), distinctUntilChanged())
+        .subscribe(val => {
+          if (control.valid) {
+            // При отправке: множим введённые часы на baseWeight
+            const hours = +val;
+            const newScore = hours * baseWeight;
+            this.eventService.setUserScore(ue.uuid, baseWeightUuid, newScore).subscribe();
+          }
+        });
+    });
+  }
+
+  onEdit(): void {
+    this.isEditing = true;
+  }
+
+  onCancel(): void {
+    this.isEditing = false;
+    this.loadData();
+  }
+
+  onDelete(): void {
+    this.eventService.deleteEvent(this.event.uuid).subscribe(() => {
+      this.routers.navigate(['/main']);
+    });
+  }
+
+  onSubscribe(): void {
+    this.eventService.subscribeToEvent(this.event.uuid).subscribe(() => this.loadData());
+  }
+
+  onUnsubscribe(): void {
+    this.eventService.unsubscribeFromEvent(this.event.uuid).subscribe(() => this.loadData());
+  }
+
+  onToggleMember(member: FullUser): void {
+    const isIn = this.members.has(member.uuid);
+    const obs = isIn
+      ? this.eventService.unsubscribeUserFromEvent(this.event.uuid, member.uuid)
+      : this.eventService.subscribeUserToEvent(this.event.uuid, member.uuid);
+    obs.subscribe(() => this.loadData());
+  }
+
+  onSubmit(): void {
+    if (this.form.invalid) {
+      return;
+    }
+    const newEvent = {
+      eventDto: {
+        uuid: this.event.uuid,
+        authorUuid: null,
+        categoryEvaluationMethodUuid: null,
+        name: this.form.value.name,
+        description: this.form.value.description,
+        startAt: this.form.value.startAt,
+        endAt: this.form.value.endAt,
+        place: this.form.value.place,
+        averageRating: null,
+        numberUsers: null
+      },
+      evaluationMethod: this.form.value.evaluationMethod,
+      categoryUuid: this.form.value.categoryUuid
+    };
+    this.eventService.updateEvent(newEvent).subscribe((event: Event) => {
+      this.isEditing = false;
+      this.loadData();
+    });
+  }
+
+  // Кастомный валидатор диапазона дат
+  dateRangeValidator(group: AbstractControl): ValidationErrors | null {
+    const start = group.get('startAt')!.value;
+    const end = group.get('endAt')!.value;
+    const now = new Date();
+    if (!start || !end) {
+      return null;
+    }
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    if (startDate >= endDate) {
+      return { dateRange: 'Дата начала должна быть раньше даты окончания' };
+    }
+    if (endDate <= now) {
+      return { dateRange: 'Дата окончания должна быть в будущем' };
+    }
+    return null;
+  }
+
+  // Обработчик изменения оценки для PLACES
+  onWeightChange(ue: UserEvent, weightUuid: string | null): void {
+    // Для PLACES score = 1 (любое ненулевое weightUuid) или 0 (null)
+    this.eventService
+      .setUserScore(ue.uuid, weightUuid, weightUuid ? 1 : 0)
+      .subscribe(() => this.loadData());
+  }
+
+  // Переключатель для ATTENDANCE
+  toggleAttendance(ue: UserEvent): void {
+    const isPresent = ue.eventWeightUuid != null;
+    const newScore = isPresent ? 0 : 1;
+    const weightUuid = this.eventWeights[0]?.uuid || null;
+    this.eventService
+      .setUserScore(ue.uuid, weightUuid, newScore)
+      .subscribe(() => this.loadData());
+  }
+}

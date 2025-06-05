@@ -1,0 +1,81 @@
+package ru.application.usermicroservice.controllers;
+
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.*;
+import ru.application.usermicroservice.domain.Squad;
+import ru.application.usermicroservice.dto.SquadDto;
+import ru.application.usermicroservice.mappers.SquadMapper;
+import ru.application.usermicroservice.services.AdditionalUserDataService;
+import ru.application.usermicroservice.services.SquadOfficerSquadService;
+import ru.application.usermicroservice.services.SquadService;
+
+import java.util.UUID;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/squad-officer/squad")
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+public class SquadOfficerSquadController {
+
+    SquadOfficerSquadService squadOfficerSquadService;
+    SquadService squadService;
+
+    SquadMapper squadMapper;
+
+
+    @PostMapping("/create")
+    public ResponseEntity<?> create(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestBody SquadDto squadDto
+    ) {
+        UUID userUuid = UUID.fromString(jwt.getSubject());
+
+        Squad squad = Squad.builder()
+                .commanderUuid(userUuid)
+                .name(squadDto.name())
+                .description(squadDto.description())
+                .score(0.0)
+                .isClosed(false)
+                .build();
+
+        Squad savedSquad = squadOfficerSquadService.create(squad);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(squadMapper.toDto(savedSquad));
+    }
+
+
+    @PutMapping("/update")
+    public ResponseEntity<?> update(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestBody SquadDto squadDto
+    ) {
+        UUID userUuid = UUID.fromString(jwt.getSubject());
+
+        Squad squad = squadService.readByCommanderUuid(userUuid);
+
+        Squad newSquad = Squad.builder()
+                .uuid(squad.getUuid())
+                .commanderUuid(userUuid)
+                .name(squadDto.name().isBlank()
+                        ? squad.getName()
+                        : squadDto.name())
+                .description(squadDto.description().isBlank()
+                        ? squad.getDescription()
+                        : squadDto.description())
+                .score(squad.getScore())
+                .isClosed(false)
+                .build();
+
+        Squad savedSquad = squadOfficerSquadService.update(newSquad);
+
+        return ResponseEntity.status(HttpStatus.OK).body(squadMapper.toDto(savedSquad));
+    }
+}

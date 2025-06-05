@@ -1,0 +1,55 @@
+package ru.application.bff.srssbff.controllers;
+
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
+import ru.application.bff.srssbff.dto.OperationDto;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/operation")
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+public class OperationController {
+
+    RestTemplate restTemplate;
+
+
+    @PostMapping
+    public ResponseEntity<?> data(
+            @RequestBody OperationDto operationDto,
+            @CookieValue(name = "AT", required = false) String accessToken
+    ) {
+        // заголовок авторизации с access token
+        HttpHeaders headers = new HttpHeaders();
+
+        System.err.println("AT = " + accessToken);
+        System.err.println("URL = " + operationDto.url());
+        System.err.println("METHOD = " + operationDto.method());
+        System.err.println("BODY = " + operationDto.body());
+
+        if (accessToken != null && !accessToken.isBlank()) {
+            headers.setBearerAuth(accessToken); // слово Bearer будет добавлено автоматически
+        }
+        headers.setContentType(MediaType.APPLICATION_JSON); // чтобы передать searchValues в формате JSON
+
+        HttpEntity<?> request = operationDto.body() != null
+                ? new HttpEntity<>(operationDto.body(), headers)
+                : new HttpEntity<>(headers);
+
+        // получение бизнес-данных пользователя (ответ обернется в DataResult)
+        return restTemplate.exchange(
+                operationDto.url(),
+                operationDto.method(),
+                request,
+                Object.class
+        );
+    }
+}

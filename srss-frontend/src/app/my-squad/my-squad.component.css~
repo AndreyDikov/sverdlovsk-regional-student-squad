@@ -1,0 +1,195 @@
+/* Смещение под шапку и боковое меню */
+:host {
+  display: block;
+  padding-top: 150px;
+  padding-left: 350px;
+}
+
+/* Flex-обёртка: карточка слева, сайдбар справа */
+.my-squad-wrapper {
+  display: flex;
+  gap: 24px;
+}
+
+/* ----- Левая колонка: карточка отряда ----- */
+.my-squad-card {
+  background: #ffffff;
+  padding: 24px 50px;
+  border-radius: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  flex-shrink: 0;
+}
+
+/* Заголовок отряда */
+.my-squad-card h2 {
+  margin: 16px 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+/* Текст внутри карточки */
+.my-squad-card p {
+  margin: 0 0 16px;
+  color: #555555;
+  line-height: 1.4;
+}
+
+/* Кнопки в карточке */
+.my-squad-card button {
+  background: #007bff;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-right: 8px;
+}
+
+.my-squad-card button:hover {
+  background: #0069d9;
+}
+
+/* Форма создания/редактирования */
+.my-squad-card form {
+  display: flex;
+  flex-direction: column;
+}
+
+.my-squad-card form label {
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.my-squad-card form input,
+.my-squad-card form textarea {
+  padding: 8px;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+  font-size: 14px;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+/* Кнопки формы */
+.form-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Загрузка фото */
+.photo-upload {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.photo-upload img,
+.photo-upload .placeholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  background: #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+  font-size: 14px;
+  color: #777777;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.photo-upload button {
+  background: #6c757d;
+  color: #ffffff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.photo-upload button:hover {
+  background: #5a6268;
+}
+
+/* ----- Правая колонка: сайдбар с командиром и участниками ----- */
+.my-squad-sidebar {
+  padding: 24px;
+  width: 300px;
+  flex-shrink: 0;
+}
+
+/* Блок “Командир” */
+.commander {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.commander .label {
+  font-weight: 500;
+  margin-right: 8px;
+}
+
+.commander a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.commander a:hover {
+  text-decoration: underline;
+}
+
+/* Блок “Участники” */
+.members {
+  display: block;
+  margin-bottom: 12px;
+  color: black;
+  font-weight: bold;
+}
+
+.participants-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.participant-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+/* Аватар с инициалами */
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #007bff;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  margin-right: 12px;
+}
+
+/* Информация по участнику */
+.info {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.name {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.contribution {
+  margin-left: auto;
+  font-size: 12px;
+  color: #777777;
+}
+

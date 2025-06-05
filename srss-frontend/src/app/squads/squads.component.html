@@ -1,0 +1,52 @@
+<app-snippet></app-snippet>
+
+<div class="content" [class.menu-open]="isMenuOpen"
+     [class.menu-closed]="!isMenuOpen" *ngIf="user$ | async as user">
+  <div>
+    <label for="sortTypeSelect">Сортировать по </label>
+    <select id="sortTypeSelect" [(ngModel)]="selectedSortType" (change)="onSortChange(selectedSortType)">
+      <option *ngFor="let type of sortedTypes" [ngValue]="type">
+        {{ getSortedTypeLabel(type) }}
+      </option>
+    </select>
+  </div>
+
+  <div *ngIf="squads?.length">
+    <div class="event-grid">
+      <div
+        *ngFor="let squad of squads"
+        class="event-card"
+      >
+        <div class="card-header">
+          <img
+            src="assets/default-images/squad/squad.png"
+            alt="{{ squad.name }}"
+            class="event-image"
+          />
+          <div class="icon">
+            <span>{{ squad.score }}</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <h6>{{ squad.name }}</h6>
+          <p>
+            <strong>Командир: </strong>
+            <a class="author"
+               [routerLink]="squad.commanderUuid === user.uuid
+                  ? ['/my-profile']
+                  : ['/other-profile', squad.commanderUuid]"
+            >
+              {{ commanders.get(squad.commanderUuid)?.name }}
+              {{ commanders.get(squad.commanderUuid).surname }}
+            </a>
+          </p>
+          <p>
+            <strong>Число участников: </strong>
+            {{  squad.numberUsers }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

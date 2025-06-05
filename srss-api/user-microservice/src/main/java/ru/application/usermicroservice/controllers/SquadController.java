@@ -1,0 +1,53 @@
+package ru.application.usermicroservice.controllers;
+
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import ru.application.usermicroservice.domain.Squad;
+import ru.application.usermicroservice.dto.SquadDto;
+import ru.application.usermicroservice.enums.SquadsSortedType;
+import ru.application.usermicroservice.mappers.SquadMapper;
+import ru.application.usermicroservice.services.SquadService;
+
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/squad")
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+public class SquadController {
+
+    SquadService squadService;
+
+    SquadMapper squadMapper;
+
+
+    @GetMapping("/read")
+    public ResponseEntity<?> read(
+            @RequestParam UUID uuid
+    ) {
+        Squad squad = squadService.read(uuid);
+
+        return ResponseEntity.status(HttpStatus.OK).body(squadMapper.toDto(squad));
+    }
+
+
+    @GetMapping("/filter-squads")
+    public ResponseEntity<?> filter(
+            @RequestParam("sorted-type") SquadsSortedType squadsSortedType,
+            @RequestParam int size,
+            @RequestParam int page
+    ) {
+        List<Squad> squads = squadService.filter(squadsSortedType, size, page);
+
+        List<SquadDto> result = squads.stream()
+                .map(squadMapper::toDto)
+                .toList();
+
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+}

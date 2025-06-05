@@ -1,0 +1,9 @@
+import {Gender} from '../enums/Gender';
+
+export interface AdditionalUserData {
+  uuid: string;
+  userUuid: string;
+  squadUuid: string;
+  gender: Gender;
+  score: number;
+}

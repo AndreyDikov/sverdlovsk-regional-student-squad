@@ -1,0 +1,2 @@
+package ru.application.usermicroservice.domain;public class AdditionalUserData {
+}

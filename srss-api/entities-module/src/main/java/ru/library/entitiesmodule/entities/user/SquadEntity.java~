@@ -1,0 +1,47 @@
+package ru.library.entitiesmodule.entities.user;
+
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.UuidGenerator;
+import org.hibernate.type.NumericBooleanConverter;
+
+import java.util.UUID;
+
+@Entity
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@Table(name = "squads")
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class SquadEntity {
+
+    @Id
+    @UuidGenerator
+    @GeneratedValue
+    @Column(updatable = false, nullable = false)
+    UUID uuid;
+
+    @Column(name = "commander_uuid")
+    UUID commanderUuid;
+
+    String name;
+    String description;
+
+    //todo: здесь должно быть поле для аватара
+
+    Double score;
+
+    @Basic
+    @Column(name = "is_closed")
+    @Convert(converter = NumericBooleanConverter.class)
+    Boolean isClosed;
+
+    @Column(name = "number_users")
+    Integer numberUsers;
+}

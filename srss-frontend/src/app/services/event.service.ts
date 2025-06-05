@@ -1,0 +1,259 @@
+import {Injectable} from '@angular/core';
+import {HttpClient} from '@angular/common/http';
+import {Observable} from 'rxjs';
+import {environment} from '../../environments/environment';
+import {Operation} from '../dto/Operation';
+import {HttpMethod} from '../enums/HttpMethod';
+import {buildQueryString} from '../functions/buildQueryStringFunction';
+import {NewEvent} from '../dto/NewEvent';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class EventService {
+
+  constructor(
+    private http: HttpClient
+  ) {
+  }
+
+
+  getAllEvents(): Observable<any> {
+    const params: string = buildQueryString(new Map<string, any>([
+      ['sorted-type', 'START_DATE'],
+      ['size', 100],
+      ['page', 1]
+    ]));
+
+    return this.http.post(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL + environment.eventMicroserviceURL + '/events/filter-events' + params,
+      method: HttpMethod.GET
+    });
+  }
+
+
+  getCategoryEvaluationMethodByUuid(uuid: string): Observable<any> {
+    const params: string = buildQueryString(new Map<string, any>([
+      ['evaluation-method-uuid', uuid]
+    ]));
+
+    return this.http.post(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL + environment.eventMicroserviceURL + '/categories/get-category-evaluation-method-by-uuid' + params,
+      method: HttpMethod.GET
+    });
+  }
+
+
+  getUserEvents(uuid: string): Observable<any> {
+    const params: string = buildQueryString(new Map<string, any>([
+      ['user-uuid', uuid]
+    ]));
+
+    return this.http.post(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL + environment.eventMicroserviceURL + '/events/read-user-events' + params,
+      method: HttpMethod.GET
+    });
+  }
+
+
+  getEventsByAuthorUuid(uuid: string): Observable<any> {
+    const params: string = buildQueryString(new Map<string, any>([
+      ['author-uuid', uuid]
+    ]));
+
+    return this.http.post(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL + environment.eventMicroserviceURL + '/events/read-events-by-author-uuid' + params,
+      method: HttpMethod.GET
+    });
+  }
+
+
+  getUserEventsHistory(uuid: string): Observable<any> {
+    const params: string = buildQueryString(new Map<string, any>([
+      ['user-uuid', uuid]
+    ]));
+
+    return this.http.post(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL + environment.eventMicroserviceURL + '/events/read-user-events-history' + params,
+      method: HttpMethod.GET
+    });
+  }
+
+
+  getAllCategoryEvaluationMethods(): Observable<any> {
+    return this.http.post(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL + environment.eventMicroserviceURL + '/categories/get-all-category-evaluation-methods',
+      method: HttpMethod.GET
+    });
+  }
+
+
+  getEventByUuid(uuid: string): Observable<any> {
+    const params: string = buildQueryString(new Map<string, any>([
+      ['uuid', uuid]
+    ]));
+
+    return this.http.post(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL + environment.eventMicroserviceURL + '/events/read' + params,
+      method: HttpMethod.GET
+    });
+  }
+
+
+  getAllUsersEventsByEventUuid(uuid: string): Observable<any> {
+    const params: string = buildQueryString(new Map<string, any>([
+      ['event-uuid', uuid]
+    ]));
+
+    return this.http.post(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL + environment.eventMicroserviceURL + '/user-event/read-users-by-event-uuid' + params,
+      method: HttpMethod.GET
+    });
+  }
+
+
+  subscribeUserToEvent(eventUuid: string, userUuid: string): Observable<any> {
+    const params: string = buildQueryString(new Map<string, any>([
+      ['event-uuid', eventUuid],
+      ['user-uuid', userUuid]
+    ]));
+
+    return this.http.post(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL
+        + environment.eventMicroserviceURL
+        + '/squad-commander/user-event/subscribe-user-to-event' + params,
+      method: HttpMethod.POST
+    });
+  }
+
+
+  unsubscribeUserFromEvent(eventUuid: string, userUuid: string): Observable<any> {
+    const params: string = buildQueryString(new Map<string, any>([
+      ['event-uuid', eventUuid],
+      ['user-uuid', userUuid]
+    ]));
+
+    return this.http.post(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL
+        + environment.eventMicroserviceURL
+        + '/squad-commander/user-event/unsubscribe-user-from-event' + params,
+      method: HttpMethod.DELETE
+    });
+  }
+
+
+  subscribeToEvent(eventUuid: string): Observable<any> {
+    const params: string = buildQueryString(new Map<string, any>([
+      ['event-uuid', eventUuid]
+    ]));
+
+    return this.http.post(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL
+        + environment.eventMicroserviceURL
+        + '/fighter/user-event/subscribe' + params,
+      method: HttpMethod.POST
+    });
+  }
+
+
+  unsubscribeFromEvent(eventUuid: string): Observable<any> {
+    const params: string = buildQueryString(new Map<string, any>([
+      ['event-uuid', eventUuid]
+    ]));
+
+    return this.http.post(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL
+        + environment.eventMicroserviceURL
+        + '/fighter/user-event/unsubscribe' + params,
+      method: HttpMethod.DELETE
+    });
+  }
+
+
+  deleteEvent(eventUuid: string): Observable<any> {
+    const params: string = buildQueryString(new Map<string, any>([
+      ['event-uuid', eventUuid]
+    ]));
+
+    return this.http.post(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL
+        + environment.eventMicroserviceURL
+        + '/staff-officer/events/delete' + params,
+      method: HttpMethod.DELETE
+    });
+  }
+
+
+  getAllCategories(): Observable<any> {
+    return this.http.post(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL + environment.eventMicroserviceURL + '/categories/read-all',
+      method: HttpMethod.GET
+    });
+  }
+
+
+  createEvent(newEvent: NewEvent): Observable<any> {
+    return this.http.post(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL + environment.eventMicroserviceURL + '/staff-officer/events/create',
+      method: HttpMethod.POST,
+      body: newEvent
+    });
+  }
+
+
+  updateEvent(newEvent: NewEvent): Observable<any> {
+    return this.http.post(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL + environment.eventMicroserviceURL + '/staff-officer/events/update',
+      method: HttpMethod.PUT,
+      body: newEvent
+    });
+  }
+
+
+  getHistoryEvents(): Observable<any> {
+    const params: string = buildQueryString(new Map<string, any>([
+      ['sorted-type', 'START_DATE'],
+      ['size', 100],
+      ['page', 1]
+    ]));
+
+    return this.http.post(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL + environment.eventMicroserviceURL + '/events/history-events' + params,
+      method: HttpMethod.GET
+    });
+  }
+
+
+  getEventWeightsByCategoryEvaluationMethodUuid(uuid: string | null): Observable<any> | null {
+    if (!uuid) {
+      return null;
+    }
+
+    const params: string = buildQueryString(new Map<string, any>([
+      ['category-evaluation-method-uuid', uuid]
+    ]));
+
+    return this.http.post(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL
+        + environment.eventMicroserviceURL
+        + '/event-weight/read-weights-by-category-evaluation-method-uuid' + params,
+      method: HttpMethod.GET
+    });
+  }
+
+
+  setUserScore(userEventUuid: string, eventWeightUuid: string, score: number = 1): Observable<any> {
+    const params: string = buildQueryString(new Map<string, any>([
+      ['user-event-uuid', userEventUuid],
+      ['event-weight-uuid', eventWeightUuid],
+      ['score', score]
+    ]));
+
+    return this.http.post(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL
+        + environment.eventMicroserviceURL
+        + '/staff-officer/user-event/set-user-score' + params,
+      method: HttpMethod.PUT
+    });
+  }
+}

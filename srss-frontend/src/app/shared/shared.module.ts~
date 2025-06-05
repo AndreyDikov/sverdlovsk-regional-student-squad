@@ -1,0 +1,22 @@
+import { NgModule } from '@angular/core';
+import {CommonModule, NgOptimizedImage} from '@angular/common';
+import { SnippetComponent } from './snippet/snippet.component';
+import {RouterLink, RouterLinkActive} from '@angular/router';
+
+
+
+@NgModule({
+  declarations: [
+    SnippetComponent
+  ],
+  imports: [
+    CommonModule,
+    NgOptimizedImage,
+    RouterLink,
+    RouterLinkActive
+  ],
+  exports: [
+    SnippetComponent
+  ]
+})
+export class SharedModule { }

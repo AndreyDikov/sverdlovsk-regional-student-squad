@@ -1,0 +1,138 @@
+import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Observable, Subscription} from 'rxjs';
+import {User} from '../dto/User';
+import {UserService} from '../services/user.service';
+import {hasRole} from '../functions/hasRoleFunction';
+import {Router} from '@angular/router';
+import {Title} from '@angular/platform-browser';
+import {EventService} from '../services/event.service';
+import {Category} from '../dto/Category';
+import {EVALUATION_METHOD_LABELS, EvaluationMethod} from '../enums/EvaluationMethod';
+import {AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators} from '@angular/forms';
+import {Event} from '../dto/Event';
+
+@Component({
+  selector: 'app-new-event',
+  templateUrl: './new-event.component.html',
+  styleUrls: ['./new-event.component.css']
+})
+export class NewEventComponent implements OnInit, OnDestroy {
+  private sub = new Subscription();
+  user$: Observable<User | null> = this.userService.user$;
+  categories: Category[] = [];
+  evaluationMethods = EVALUATION_METHOD_LABELS;
+  form: FormGroup;
+  allowedMethods: EvaluationMethod[] = [];
+
+  constructor(
+    private userService: UserService,
+    private eventService: EventService,
+    private titleService: Title,
+    private fb: FormBuilder,
+    private router: Router
+  ) {
+    this.form = this.fb.group({
+      name: ['', Validators.required],
+      description: [''],
+      place: [''],
+      startAt: [null, Validators.required],
+      endAt: [null, Validators.required],
+      categoryUuid: [null, Validators.required],
+      evaluationMethod: [null, Validators.required]
+    }, { validators: [this.dateRangeValidator] });
+  }
+
+  ngOnInit(): void {
+    // Проверка ролей
+    this.sub.add(this.user$.subscribe(u => {
+      if (!(hasRole(u, 'staff-officer') || hasRole(u, 'staff-commander'))) {
+        this.userService.logoutAction();
+      }
+    }));
+
+    // Загрузка категорий и установка первой по умолчанию
+    this.eventService.getAllCategories()
+      .subscribe((c: Category[]) => {
+        this.categories = c;
+        if (this.categories.length) {
+          // выбираем первую категорию сразу
+          this.form.get('categoryUuid')!.setValue(this.categories[0].uuid);
+        }
+      });
+
+    // реагируем на смену категории
+    this.sub.add(
+      this.form.get('categoryUuid')!.valueChanges.subscribe(uuid => {
+        const cat = this.categories.find(c => c.uuid === uuid);
+        if (!cat) return;
+
+        let methods: EvaluationMethod[] = [];
+        if (['Спорт', 'Творческая работа'].includes(cat.name)) {
+          methods = [EvaluationMethod.PLACES];
+        } else if (['Социальная работа', 'Производственная работа'].includes(cat.name)) {
+          methods = [EvaluationMethod.MAN_HOURS];
+        } else if (cat.name.startsWith('Участие в мероприятии')) {
+          methods = [EvaluationMethod.PLACES, EvaluationMethod.ATTENDANCE];
+        }
+
+        this.allowedMethods = methods;
+
+        if (methods.length === 1) {
+          // сразу ставим единственный вариант
+          this.form.get('evaluationMethod')!.setValue(methods[0]);
+        } else if (methods.length > 1) {
+          // выбираем первый вариант списка по умолчанию
+          this.form.get('evaluationMethod')!.setValue(methods[0]);
+        }
+      })
+    );
+
+    this.titleService.setTitle('Новое событие');
+  }
+
+  ngOnDestroy(): void {
+    this.sub.unsubscribe();
+  }
+
+  // Кастомный валидатор
+  private dateRangeValidator(group: AbstractControl): ValidationErrors | null {
+    const start = group.get('startAt')!.value;
+    const end = group.get('endAt')!.value;
+    const now = new Date();
+    if (!start || !end) {
+      return null;
+    }
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    if (startDate >= endDate) {
+      return { dateRange: 'Дата начала должна быть раньше даты окончания' };
+    }
+    if (endDate <= now) {
+      return { dateRange: 'Дата окончания должна быть в будущем' };
+    }
+    return null;
+  }
+
+  onSubmit(): void {
+    if (this.form.invalid) { return; }
+    const newEvent = {
+      eventDto: {
+        uuid: null,
+        authorUuid: null,
+        categoryEvaluationMethodUuid: null,
+        name: this.form.value.name,
+        description: this.form.value.description,
+        startAt: this.form.value.startAt,
+        endAt: this.form.value.endAt,
+        place: this.form.value.place,
+        averageRating: null,
+        numberUsers: 0
+      },
+      evaluationMethod: this.form.value.evaluationMethod,
+      categoryUuid: this.form.value.categoryUuid
+    };
+    this.eventService.createEvent(newEvent).subscribe((e: Event) => {
+      this.router.navigate(['/event', e.uuid]).then();
+    });
+  }
+}

@@ -1,0 +1,63 @@
+<app-snippet></app-snippet>
+
+<!-- users.component.html -->
+<div class="users-container">
+
+  <!-- Фильтры по ролям -->
+  <div class="filters">
+    <button class="filter-btn">Все</button>
+    <button class="filter-btn">Кандидаты</button>
+    <button class="filter-btn">Бойцы</button>
+    <button class="filter-btn">Командиры</button>
+    <button class="filter-btn">Штабники</button>
+  </div>
+
+  <!-- Сортировка -->
+  <div class="sort">
+    <label for="sort-select">Сортировать по</label>
+    <select id="sort-select">
+      <option value="score">баллу</option>
+      <option value="name">имени</option>
+      <option value="surname">фамилии</option>
+    </select>
+  </div>
+
+  <!-- Секция "Вы" -->
+  <div class="section">
+    <div class="section-title">Вы</div>
+    <div class="user-card active" *ngIf="currentUser$ | async as currentUser" [routerLink]="['/my-profile']">
+      <div class="cell">
+        0
+      </div>
+      <div class="cell">{{ currentUser.name }}</div>
+      <div class="cell">{{ currentUser.surname }}</div>
+    </div>
+  </div>
+
+  <!-- Секция "Пользователи" -->
+  <div class="section">
+    <div class="section-title">Пользователи</div>
+    <!-- Заголовок таблицы -->
+    <div class="user-card header">
+      <div class="cell">Балл</div>
+      <div class="cell">Имя</div>
+      <div class="cell">Фамилия</div>
+    </div>
+    <!-- Список пользователей -->
+    <div *ngIf="currentUser$ | async as currentUser">
+      <div class="user-card"
+           [class.active]="user.uuid === currentUser.uuid"
+           *ngFor="let user of users"
+           [routerLink]="currentUser.uuid === user.uuid
+                  ? ['/my-profile']
+                  : ['/other-profile', user.uuid]"
+      >
+        <div class="cell">
+          {{ scores[user.uuid] | async }}
+        </div>
+        <div class="cell">{{ user.name }}</div>
+        <div class="cell">{{ user.surname }}</div>
+      </div>
+    </div>
+  </div>
+</div>

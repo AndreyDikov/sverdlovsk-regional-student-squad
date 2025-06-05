@@ -1,0 +1,112 @@
+/* Общее */
+.content {
+  padding: 20px;
+  margin-top: 130px;
+  transition: margin-left 0s;
+}
+
+/* Состояние: меню открыто (как сейчас) */
+.content.menu-open {
+  margin-left: 300px;
+}
+
+/* Состояние: меню закрыто */
+.content.menu-closed {
+  margin-left:  160px; /* или любое другое нужное значение */
+}
+
+/* Сетка карточек: 1 колонка на мобильных, 2 на планшете, 4 на десктопе */
+.event-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+}
+
+@media (min-width: 600px) {
+  .event-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .event-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Карточка события */
+.event-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0s;
+}
+
+.event-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
+/* Заголовок карточки: картинка и кнопка +/– */
+.card-header {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.event-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background-color: #ffffff;
+  border: 2px solid #000;
+  color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  user-select: none;
+}
+
+.event-card.joined .icon {
+  background: #dc3545;
+}
+
+/* Тело карточки: текст */
+.card-body {
+  padding: 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-body h6 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: #333;
+}
+
+.card-body p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+a:hover,
+a:focus {
+  text-decoration: none;
+}
+

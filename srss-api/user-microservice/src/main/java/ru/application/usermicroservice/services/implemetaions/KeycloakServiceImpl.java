@@ -1,0 +1,76 @@
+package ru.application.usermicroservice.services.implemetaions;
+
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.keycloak.admin.client.resource.UserResource;
+import org.keycloak.admin.client.resource.UsersResource;
+import org.keycloak.representations.idm.RoleRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
+import org.springframework.stereotype.Service;
+import ru.application.usermicroservice.domain.User;
+import ru.application.usermicroservice.enums.Roles;
+import ru.application.usermicroservice.services.KeycloakService;
+import ru.application.usermicroservice.utils.RoleSelector;
+
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+public class KeycloakServiceImpl implements KeycloakService {
+
+    UsersResource usersResource;
+
+
+    @Override
+    public User findUserByUuid(UUID uuid) {
+        UserResource resource = usersResource.get(uuid.toString());
+
+        UserRepresentation user = resource.toRepresentation();
+
+        Set<Roles> realmRoles = resource.roles()
+                .realmLevel()
+                .listAll()
+                .stream()
+                .map(RoleRepresentation::getName)
+                .map(Roles::of)
+                .collect(Collectors.toSet());
+
+        Roles role = RoleSelector.selectRole(realmRoles);
+
+        return User.builder()
+                .uuid(uuid)
+                .name(user.getFirstName())
+                .surname(user.getLastName())
+                .email(user.getEmail())
+                .role(role.getValue())
+                .build();
+    }
+
+
+    @Override
+    public List<User> findAllUsers() {
+        List<UserRepresentation> reps = usersResource.list();
+        return reps.stream()
+                .map(rep -> {
+                    UUID uuid = UUID.fromString(rep.getId());
+                    Set<Roles> realmRoles = usersResource.get(rep.getId())
+                            .roles().realmLevel().listAll().stream()
+                            .map(RoleRepresentation::getName)
+                            .map(Roles::of).collect(Collectors.toSet());
+                    Roles role = RoleSelector.selectRole(realmRoles);
+                    return User.builder()
+                            .uuid(uuid)
+                            .name(rep.getFirstName())
+                            .surname(rep.getLastName())
+                            .email(rep.getEmail())
+                            .role(role.getValue())
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+}

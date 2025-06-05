@@ -1,0 +1,47 @@
+package ru.library.entitiesmodule.entities.event;
+
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.UuidGenerator;
+
+import java.util.UUID;
+
+@Entity
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@Table(name = "users_events")
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class UserEvent {
+
+    @Id
+    @UuidGenerator
+    @GeneratedValue
+    @Column(updatable = false, nullable = false)
+    UUID uuid;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_coefficient_uuid", referencedColumnName = "uuid")
+    EventWeight eventWeight;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_uuid", referencedColumnName = "uuid")
+    Event event;
+
+    @Column(name = "user_uuid")
+    UUID userUuid;
+
+    String comment;
+
+    @Column(name = "event_rating")
+    Integer eventRating;
+
+    @Column(name = "user_score")
+    Double userScore;
+}

@@ -1,0 +1,1 @@
+# sverdlovsk-regional-student-squad

@@ -1,0 +1,186 @@
+<app-snippet></app-snippet>
+
+<div class="event-container" *ngIf="user$ | async as currentUser">
+  <!-- Левая колонка: карточка / форма -->
+  <div class="event-card">
+    <ng-container *ngIf="!isEditing; else editTpl">
+      <img [src]="environment.imageMap[categoryEvaluationMethod.category.name]" alt="{{ event.name }}"
+           class="event-img">
+
+      <h2>{{ event.name }}</h2>
+      <p><strong>Место проведения:</strong> {{ event.place }}</p>
+      <p><strong>Время:</strong> {{ event.startAt | date:'dd.MM.yy HH:mm' }} – {{ event.endAt | date:'dd.MM.yy HH:mm' }}
+      </p>
+      <p><strong>Категория:</strong> {{ categoryEvaluationMethod.category.name }}</p>
+      <p>{{ event.description }}</p>
+
+      <ng-container *ngIf="currentUserUuid === author.uuid">
+        <button class="btn btn-primary"
+                (click)="onEdit()"
+                *ngIf="!isPast(event.endAt)"
+        >
+          Редактировать
+        </button>
+
+        <button class="btn btn-danger"
+                (click)="onDelete()"
+                *ngIf="!isPast(event.startAt)"
+        >
+          Удалить
+        </button>
+      </ng-container>
+
+      <ng-container *ngIf="currentUserUuid !== author.uuid">
+        <ng-container *ngIf="members.has(currentUserUuid!); else signupTpl">
+          <button class="btn btn-danger" (click)="onUnsubscribe()">Отписаться</button>
+        </ng-container>
+        <ng-template #signupTpl>
+          <button class="btn btn-primary" (click)="onSubscribe()">Записаться</button>
+        </ng-template>
+      </ng-container>
+    </ng-container>
+
+    <!-- Форма редактирования -->
+    <ng-template #editTpl>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <div class="form-field">
+          <label>Название</label>
+          <input formControlName="name" />
+          <div class="error" *ngIf="form.get('name')?.touched && form.get('name')?.hasError('required')">
+            Обязательное поле
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>Описание</label>
+          <textarea formControlName="description"></textarea>
+        </div>
+
+        <div class="form-field">
+          <label>Место</label>
+          <input formControlName="place" />
+        </div>
+
+        <div class="form-field" *ngIf="!isPast(event.startAt)">
+          <label>Дата начала</label>
+          <input type="datetime-local" formControlName="startAt" />
+        </div>
+
+        <div class="form-field">
+          <label>Дата окончания</label>
+          <input type="datetime-local" formControlName="endAt" />
+        </div>
+
+        <div class="error" *ngIf="form.errors?.dateRange">
+          {{ form.errors.dateRange }}
+        </div>
+
+        <div class="form-field" *ngIf="!isPast(event.startAt)">
+          <label>Категория</label>
+          <select formControlName="categoryUuid">
+            <option *ngFor="let c of categories" [value]="c.uuid">
+              {{ c.name }}
+            </option>
+          </select>
+        </div>
+
+        <!-- если методов больше одного — показываем селект -->
+        <div class="form-field" *ngIf="allowedMethods.length > 1 && !isPast(event.startAt)">
+          <label>Метод оценки</label>
+          <select formControlName="evaluationMethod">
+            <option *ngFor="let m of allowedMethods" [value]="m">
+              {{ evaluationMethods[m] }}
+            </option>
+          </select>
+        </div>
+
+        <!-- если метод единственный — просто показываем его -->
+        <div class="form-field" *ngIf="allowedMethods.length === 1 && !isPast(event.startAt)">
+          <label>Метод оценки</label>
+          <span>{{ evaluationMethods[allowedMethods[0]] }}</span>
+        </div>
+
+        <div class="form-field">
+          <button type="button">Загрузить изображение</button>
+        </div>
+
+        <button type="submit" [disabled]="form.invalid">Сохранить</button>
+        <button type="button" class="btn btn-outline" (click)="onCancel()">Отмена</button>
+      </form>
+    </ng-template>
+  </div>
+
+  <!-- Правая колонка: участники и команда -->
+  <div class="sidebar">
+    <p><strong>Организатор:</strong> <a [routerLink]="currentUserUuid === author.uuid
+    ? ['/my-profile']
+    : ['/other-profile', author.uuid]">
+      {{ author.name }} {{ author.surname }}
+    </a></p>
+    <p><strong>{{ members.size }} участников</strong></p>
+    <ul class="member-list">
+      <li *ngFor="let ue of usersEvent">
+        {{ members.get(ue.userUuid)?.name }} {{ members.get(ue.userUuid)?.surname }}
+        <ng-container *ngIf="author.uuid === currentUserUuid && isPast(event.startAt)">
+          <ng-container *ngIf="categoryEvaluationMethod.evaluationMethod === EvaluationMethod.PLACES">
+            <select
+              [ngModel]="ue.eventWeightUuid"
+              (ngModelChange)="onWeightChange(ue, $event)"
+            >
+              <option [ngValue]="null">Отсутствовал</option>
+              <option *ngFor="let ew of eventWeights" [ngValue]="ew.uuid">
+                {{ ew.name }}
+              </option>
+            </select>
+          </ng-container>
+
+          <!-- MAN_HOURS: input с дебаунсом -->
+          <ng-container *ngIf="categoryEvaluationMethod.evaluationMethod === EvaluationMethod.MAN_HOURS">
+            <input
+              type="number"
+              [formControl]="userScoreControls.get(ue.uuid)"
+            />
+            <div
+              class="error"
+              *ngIf="
+              userScoreControls.get(ue.uuid)?.touched &&
+              userScoreControls.get(ue.uuid)?.hasError('pattern')
+            "
+            >
+              Введите целое число
+            </div>
+          </ng-container>
+
+          <!-- ATTENDANCE: кнопка-переключатель -->
+          <ng-container *ngIf="categoryEvaluationMethod.evaluationMethod === EvaluationMethod.ATTENDANCE">
+            <button
+              [class.btn-danger]="!ue.eventWeightUuid"
+              [class.btn-success]="ue.eventWeightUuid"
+              (click)="toggleAttendance(ue)"
+            >
+              {{ ue.eventWeightUuid ? 'Присутствовал' : 'Отсутствовал' }}
+            </button>
+          </ng-container>
+        </ng-container>
+      </li>
+    </ul>
+
+    <div class="squad" *ngIf="mySquadMembers?.length
+    && (hasRole(currentUser, 'squad-commander')
+    || hasRole(currentUser, 'staff-officer')
+    || hasRole(currentUser, 'staff-commander'))">
+      <hr>
+      <p><strong>Записать бойцов из команды</strong></p>
+      <ul class="team-list">
+        <li *ngFor="let m of mySquadMembers">
+          {{ m.name }} {{ m.surname }}
+          <button class="icon-btn" (click)="onToggleMember(m)">
+            <i *ngIf="members.has(m.uuid)" class="fa fa-minus-circle text-danger"></i>
+            <i *ngIf="!members.has(m.uuid)" class="fa fa-plus-circle text-primary"></i>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>

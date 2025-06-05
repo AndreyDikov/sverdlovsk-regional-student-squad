@@ -1,0 +1,12 @@
+.form-field {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  margin-top: 150px;
+  margin-left: 300px;
+}
+
+.error {
+  color: red;
+  font-size: 0.9rem;
+}

@@ -1,0 +1,37 @@
+package ru.library.entitiesmodule.entities.event;
+
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.UuidGenerator;
+
+import java.util.UUID;
+
+@Entity
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@Table(name = "events_weights")
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class EventCoefficient {
+
+    @Id
+    @UuidGenerator
+    @GeneratedValue
+    @Column(updatable = false, nullable = false)
+    UUID uuid;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIdentityReference(alwaysAsId = true)
+    @JoinColumn(name = "category_evaluation_method_uuid", referencedColumnName = "uuid")
+    CategoryEvaluationMethod categoryEvaluationMethod;
+
+    String name;
+    Double coefficient;
+}

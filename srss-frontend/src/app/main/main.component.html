@@ -1,0 +1,61 @@
+<app-snippet></app-snippet>
+
+<div class="content"
+     [class.menu-open]="isMenuOpen"
+     [class.menu-closed]="!isMenuOpen"
+>
+  <div class="main"
+       [class.menu-open]="isMenuOpen"
+       [class.menu-closed]="!isMenuOpen"
+       *ngIf="user$ | async as user"
+  >
+    <div *ngIf="events?.length; else noEvents">
+      <div class="event-grid">
+        <div
+          *ngFor="let ev of events"
+          class="event-card"
+          [class.joined]="joined.has(ev.uuid)"
+          [routerLink]="['/event', ev.uuid]"
+        >
+          <div class="card-header">
+            <img
+              [src]="environment.imageMap[categoryEvaluationMethods.get(ev.categoryEvaluationMethodUuid)?.category.name]"
+              alt="{{ ev.name }}"
+              class="event-image"
+            />
+            <div *ngIf="ev.authorUuid !== user.uuid" class="icon" (click)="toggleJoin(ev)">
+              <span *ngIf="!joined.has(ev.uuid)">+</span>
+              <span *ngIf=" joined.has(ev.uuid)">−</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <h6>{{ ev.name }}</h6>
+            <p>
+              <strong>Организовал: </strong>
+              <a class="author"
+                 [routerLink]="ev.authorUuid === user.uuid
+                  ? ['/my-profile']
+                  : ['/other-profile', ev.authorUuid]"
+              >
+                {{ users.get(ev.authorUuid)?.name }}
+                {{ users.get(ev.authorUuid)?.surname }}
+              </a>
+            </p>
+            <p>
+              <strong>Начало:</strong>
+              {{ ev.startAt | date: 'dd.MM.yyyy HH:mm' }}
+            </p>
+            <p>
+              <strong>Конец:</strong>
+              {{ ev.endAt | date: 'dd.MM.yyyy HH:mm' }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #noEvents>
+      <p>Событий нет.</p>
+    </ng-template>
+  </div>
+</div>

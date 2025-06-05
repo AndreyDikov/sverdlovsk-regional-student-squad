@@ -1,0 +1,2 @@
+package ru.application.eventmicroservice.controllers;public class EventWeightController {
+}

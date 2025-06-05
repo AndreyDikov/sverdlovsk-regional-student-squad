@@ -1,0 +1,38 @@
+package ru.application.usermicroservice.repositories;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+import ru.library.entitiesmodule.entities.user.AdditionalUserDataEntity;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+public interface AdditionalUserDataRepository
+        extends JpaRepository<AdditionalUserDataEntity, UUID> {
+
+    @Modifying
+    @Query(value = """
+        update additional_users_data
+        set squad_uuid = null
+        where user_uuid = :userUuid
+    """, nativeQuery = true)
+    void deleteSquad(UUID userUuid);
+
+
+    @Query(value = """
+        select * from additional_users_data
+        where user_uuid = :userUuid
+    """, nativeQuery = true)
+    Optional<AdditionalUserDataEntity> findByUserUuid(UUID userUuid);
+
+
+    @Query(value = """
+        select * from additional_users_data
+        where squad_uuid = :squadUuid
+    """, nativeQuery = true)
+    List<AdditionalUserDataEntity> findBySquadUuid(UUID squadUuid);
+}

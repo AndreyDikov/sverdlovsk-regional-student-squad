@@ -1,0 +1,66 @@
+<app-snippet></app-snippet>
+
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="form-field">
+    <label>Название</label>
+    <input formControlName="name" />
+    <div class="error" *ngIf="form.get('name')?.touched && form.get('name')?.hasError('required')">
+      Обязательное поле
+    </div>
+  </div>
+
+  <div class="form-field">
+    <label>Описание</label>
+    <textarea formControlName="description"></textarea>
+  </div>
+
+  <div class="form-field">
+    <label>Место</label>
+    <input formControlName="place" />
+  </div>
+
+  <div class="form-field">
+    <label>Дата начала</label>
+    <input type="datetime-local" formControlName="startAt" />
+  </div>
+
+  <div class="form-field">
+    <label>Дата окончания</label>
+    <input type="datetime-local" formControlName="endAt" />
+  </div>
+
+  <div class="error" *ngIf="form.errors?.dateRange">
+    {{ form.errors.dateRange }}
+  </div>
+
+  <div class="form-field">
+    <label>Категория</label>
+    <select formControlName="categoryUuid">
+      <option *ngFor="let c of categories" [value]="c.uuid">
+        {{ c.name }}
+      </option>
+    </select>
+  </div>
+
+  <!-- если методов больше одного — показываем селект -->
+  <div class="form-field" *ngIf="allowedMethods.length > 1">
+    <label>Метод оценки</label>
+    <select formControlName="evaluationMethod">
+      <option *ngFor="let m of allowedMethods" [value]="m">
+        {{ evaluationMethods[m] }}
+      </option>
+    </select>
+  </div>
+
+  <!-- если метод единственный — просто показываем его -->
+  <div class="form-field" *ngIf="allowedMethods.length === 1">
+    <label>Метод оценки</label>
+    <span>{{ evaluationMethods[allowedMethods[0]] }}</span>
+  </div>
+
+  <div class="form-field">
+    <button type="button">Загрузить изображение</button>
+  </div>
+
+  <button type="submit" [disabled]="form.invalid">Создать событие</button>
+</form>

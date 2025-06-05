@@ -1,0 +1,13 @@
+rootProject.name = 'srss-api'
+
+//microservices
+includeBuild 'configuration-microservice'
+includeBuild 'server-microservice'
+includeBuild 'user-microservice'
+includeBuild 'notification-microservice'
+includeBuild 'event-microservice'
+includeBuild 'gateway-microservice'
+
+//modules
+includeBuild 'entities-module'
+includeBuild 'converters-module'

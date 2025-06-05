@@ -1,0 +1,146 @@
+package ru.application.bff.srssbff.controllers;
+
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+import ru.application.bff.srssbff.cookie.CookieService;
+import ru.application.bff.srssbff.dto.UserDto;
+import ru.application.bff.srssbff.enums.CookieKey;
+import ru.application.bff.srssbff.enums.Roles;
+import ru.application.bff.srssbff.utils.RoleSelector;
+
+import java.net.URI;
+import java.util.Base64;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/profile")
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class ProfileController {
+
+    final RestTemplate restTemplate;
+    final CookieService cookieService;
+
+    @Value("${keycloak.secret}") String clientSecret;
+    @Value("${keycloak.url}") String keyCloakURI;
+    @Value("${client.url}") String clientURL;
+    @Value("${keycloak.clientid}") String clientId;
+
+
+    @GetMapping("/read")
+    public ResponseEntity<?> read(
+            @CookieValue("IT") String idToken,
+            @CookieValue("AT") String accessToken
+    ) {
+        if (idToken == null) {
+            return new ResponseEntity<>("access token not found", HttpStatus.NOT_ACCEPTABLE);
+        }
+        try {
+            // 1) Разделяем JWT на части
+            String payloadPart = idToken.split("\\.")[1];
+            String payloadAtPart = accessToken.split("\\.")[1];
+            // 2) Base64Url-декодирование
+            String payloadJson = new String(Base64.getUrlDecoder().decode(payloadPart));
+            String payloadAtJson = new String(Base64.getUrlDecoder().decode(payloadAtPart));
+            // 3) Парсим JSON
+            JSONObject obj = new JSONObject(payloadJson);
+            JSONObject objAt = new JSONObject(payloadAtJson);
+
+            Set<Roles> roles = new HashSet<>();
+            if (objAt.has("realm_access")) {
+                JSONObject realmAccess = objAt.getJSONObject("realm_access");
+                if (realmAccess.has("roles")) {
+                    JSONArray rolesArray = realmAccess.getJSONArray("roles");
+                    for (int i = 0; i < rolesArray.length(); i++) {
+                        roles.add(Roles.of(rolesArray.getString(i)));
+                    }
+                }
+            }
+            Roles role = RoleSelector.selectRole(roles);
+            // 4) Формируем DTO
+            UserDto profile = new UserDto(
+                    UUID.fromString(obj.getString("sub")),
+                    obj.getString("email"),
+                    obj.getString("given_name"),
+                    obj.getString("family_name"),
+                    role.getValue()
+            );
+            return ResponseEntity.ok(profile);
+        } catch (Exception ex) {
+            // неверный формат токена
+            return new ResponseEntity<>("invalid token", HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+
+    @GetMapping("/logout")
+    public ResponseEntity<String> logout(
+            @CookieValue(name = "IT", required = false) String idToken,
+            @CookieValue(name = "RT", required = false) String refreshToken
+    ) {
+
+        // 1. Отзываем старый Refresh Token (если он есть)
+        if (refreshToken != null) {
+            HttpHeaders revokeHeaders = new HttpHeaders();
+            revokeHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            MultiValueMap<String, String> revokeForm = new LinkedMultiValueMap<>();
+            revokeForm.add("client_id", clientId);
+            revokeForm.add("client_secret", clientSecret);
+            revokeForm.add("token", refreshToken);
+            revokeForm.add("token_type_hint", "refresh_token");
+            HttpEntity<MultiValueMap<String, String>> revokeReq =
+                    new HttpEntity<>(revokeForm, revokeHeaders);
+            try {
+                restTemplate.postForEntity(
+                        keyCloakURI + "/revoke",
+                        revokeReq,
+                        Void.class
+                );
+            } catch (HttpStatusCodeException e) {
+                System.err.println("Keycloak revoke error: status=" +
+                        e.getStatusCode() + ", body=" + e.getResponseBodyAsString());
+            } catch (ResourceAccessException e) {
+                System.err.println("Keycloak revoke failed: " + e.getMessage());
+            }
+        }
+
+        // 2. Логаут в Keycloak по ID Token
+        URI logoutUri = UriComponentsBuilder
+                .fromHttpUrl(keyCloakURI + "/logout")
+                .queryParam("id_token_hint", idToken)
+                .queryParam("post_logout_redirect_uri", clientURL)
+                .queryParam("client_id", clientId)
+                .build()
+                .toUri();
+        System.out.println("Keycloak logout URL: " + logoutUri);
+        try {
+            restTemplate.getForEntity(logoutUri, String.class);
+        } catch (HttpStatusCodeException e) {
+            System.err.println("Keycloak logout error: status=" +
+                    e.getStatusCode() + ", body=" + e.getResponseBodyAsString());
+        } catch (ResourceAccessException e) {
+            System.err.println("Keycloak logout failed: " + e.getMessage());
+        }
+
+        // 3. Очищаем все куки в браузере
+        HttpHeaders responseHeaders = cookieService.deleteCookies();
+        return ResponseEntity.ok().headers(responseHeaders).build();
+    }
+}

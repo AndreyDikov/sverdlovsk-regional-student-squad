@@ -1,0 +1,97 @@
+.users-container {
+  margin-top: 150px;
+  margin-left: 330px;
+  padding-right: 100px;
+}
+
+/* Кнопки-фильтры */
+.filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+
+  .filter-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 20px;
+    background-color: #e0e0e0;
+    cursor: pointer;
+    transition: background-color 0s;
+
+    &.active {
+      background-color: #d32f2f;
+      color: #fff;
+    }
+
+    &:hover:not(.active) {
+      background-color: #ccc;
+    }
+  }
+}
+
+/* Блок сортировки */
+.sort {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+
+  label {
+    font-weight: 500;
+  }
+
+  select {
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    appearance: none;
+    cursor: pointer;
+  }
+}
+
+/* Общие секции */
+.section {
+  margin-bottom: 32px;
+
+  .section-title {
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #555;
+  }
+}
+
+/* Карточки пользователей */
+.user-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  margin-bottom: 8px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #fff;
+  transition: border-color 0s, background-color 0s;
+  cursor: pointer;
+
+  &.header {
+    border-color: #1976d2;
+    background-color: #e3f2fd;
+    font-weight: 600;
+  }
+
+  &.active {
+    border-color: #d32f2f;
+  }
+
+  .cell {
+    flex: 1;
+    text-align: center;
+    white-space: nowrap;
+  }
+}
+
+.user-card:hover {
+  background-color: #BCBCBC;
+}

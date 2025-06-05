@@ -1,0 +1,71 @@
+import {Injectable} from '@angular/core';
+import {HttpClient} from '@angular/common/http';
+import {Observable} from 'rxjs';
+import {buildQueryString} from '../functions/buildQueryStringFunction';
+import {environment} from '../../environments/environment';
+import {HttpMethod} from '../enums/HttpMethod';
+import {Squad} from '../dto/Squad';
+import {SquadsSortedType} from '../enums/SquadsSortedType';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class SquadService {
+
+  constructor(
+    private http: HttpClient
+  ) {
+  }
+
+
+  getSquadByUuid(uuid: string): Observable<any> {
+    const params: string = buildQueryString(new Map<string, any>([
+      ['uuid', uuid]
+    ]));
+
+    return this.http.post(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL + environment.userMicroserviceURL + '/squad/read' + params,
+      method: HttpMethod.GET
+    });
+  }
+
+
+  getMySquad(): Observable<any> {
+    return this.http.post(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL + environment.userMicroserviceURL + '/fighter/squad/read-my-squad',
+      method: HttpMethod.GET
+    });
+  }
+
+
+  createSquad(data: Partial<Squad>): Observable<Squad> {
+    return this.http.post<Squad>(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL + environment.userMicroserviceURL + '/squad-officer/squad/create',
+      method: HttpMethod.POST,
+      body: data
+    });
+  }
+
+
+  updateSquad(data: Partial<Squad>): Observable<Squad> {
+    return this.http.post<Squad>(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL + environment.userMicroserviceURL + '/squad-officer/squad/update',
+      method: HttpMethod.PUT,
+      body: data
+    });
+  }
+
+
+  getAllSquads(sorterType: SquadsSortedType): Observable<any> {
+    const params: string = buildQueryString(new Map<string, any>([
+      ['sorted-type', sorterType],
+      ['size', 20],
+      ['page', 1]
+    ]));
+
+    return this.http.post(environment.bffURI + '/operation', {
+      url: environment.resourceServerURL + environment.userMicroserviceURL + '/squad/filter-squads' + params,
+      method: HttpMethod.GET
+    });
+  }
+}

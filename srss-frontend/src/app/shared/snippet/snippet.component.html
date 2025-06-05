@@ -1,0 +1,139 @@
+<div class="spinner" *ngIf="spinner && spinner.visibility | async"></div>
+
+<header class="snippet-header" *ngIf="user$ | async as user">
+  <div class="header-left">
+    <button
+      class="burger"
+      [class.open]="isMenuOpen"
+      (click)="toggleMenu()"
+      aria-label="Свернуть меню"
+    >
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+    <div class="snippet-logo" (click)="onLogoClick()">
+      <img ngSrc="assets/logo.png" alt="" height="87" width="87">
+      <strong class="logo-text">
+        <span class="line1">Свердловский областной</span>
+        <span class="line2">студенческий отряд</span>
+      </strong>
+    </div>
+  </div>
+
+  <span class="user-name">
+    <img routerLink="/notifications"
+         routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+         class="notifications"
+         ngSrc="assets/header/notification.png"
+         alt=""
+         height="24"
+         width="24"
+         matTooltip="Уведомления"
+         matTooltipPosition="above"
+    >
+    <span class="user-profile" routerLink="/my-profile">
+      <strong class="default-user-logo">{{ user.name[0] }}{{ user.surname[0] }}</strong>
+      {{ user.name }} {{ user.surname }}
+    </span>
+  </span>
+
+  <nav
+    class="burger-menu"
+    [class.open]="isMenuOpen"
+    [attr.aria-hidden]="!isMenuOpen"
+  >
+    <ul>
+      <li routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <a routerLink="/main"
+           matTooltip="Главная"
+           matTooltipPosition="above"
+           [matTooltipDisabled]="isMenuOpen"
+        >
+          <img ngSrc="assets/burger/main.png" height="24" width="24" alt="">
+          <span class="menu-text">Главная</span>
+        </a>
+      </li>
+      <li routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <a routerLink="/squads"
+           matTooltip="Отряды"
+           matTooltipPosition="above"
+           [matTooltipDisabled]="isMenuOpen"
+        >
+          <img ngSrc="assets/burger/squads.png" height="24" width="24" alt="">
+          <span class="menu-text">Отряды</span>
+        </a>
+      </li>
+      <li routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <a routerLink="/history-of-events"
+           matTooltip="История событий"
+           matTooltipPosition="above"
+           [matTooltipDisabled]="isMenuOpen"
+        >
+          <img ngSrc="assets/burger/history-of-events.png" height="24" width="24" alt="">
+          <span class="menu-text">История событий</span>
+        </a>
+      </li>
+      <span class="line"></span>
+      <span class="burger-block-name">Вы</span>
+      <li routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <a routerLink="/my-profile"
+           matTooltip="Мой профиль"
+           matTooltipPosition="above"
+           [matTooltipDisabled]="isMenuOpen"
+        >
+          <img ngSrc="assets/burger/my-profile.png" height="24" width="24" alt="">
+          <span class="menu-text">Мой профиль</span>
+        </a>
+      </li>
+      <li routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <a routerLink="/my-squad"
+           matTooltip="Мой отряд"
+           matTooltipPosition="above"
+           [matTooltipDisabled]="isMenuOpen"
+        >
+          <img ngSrc="assets/burger/my-squad.png" height="24" width="24" alt="">
+          <span class="menu-text">Мой отряд</span>
+        </a>
+      </li>
+      <li routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <a routerLink="/users"
+           matTooltip="Пользователи"
+           matTooltipPosition="above"
+           [matTooltipDisabled]="isMenuOpen"
+        >
+          <img ngSrc="assets/burger/users.png" height="24" width="24" alt="">
+          <span class="menu-text">Пользователи</span>
+        </a>
+      </li>
+      <div class="staff-commander-block" *ngIf="hasRole(user,'staff-commander')">
+        <span class="line"></span>
+        <span class="burger-block-name">Система</span>
+        <li routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+          <a routerLink="/settings-of-weights"
+             matTooltip="Настройка весов"
+             matTooltipPosition="above"
+             [matTooltipDisabled]="isMenuOpen"
+          >
+            <img ngSrc="assets/burger/settings-of-weights.png" height="24" width="24" alt="">
+            <span class="menu-text">Настройка весов</span>
+          </a>
+        </li>
+      </div>
+      <span class="line"></span>
+      <li routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <a class="logout"
+           (click)="logout()"
+           matTooltip="Выйти"
+           matTooltipPosition="above"
+           [matTooltipDisabled]="isMenuOpen"
+        >
+          <img class="logout-red-icon" ngSrc="assets/burger/logout.png" height="24" width="24" alt="">
+          <img class="logout-white-icon" ngSrc="assets/burger/logout-white.png" height="24" width="24" alt="">
+          <span class="menu-text">Выйти</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+</header>

@@ -1,0 +1,78 @@
+<app-snippet></app-snippet>
+
+<div *ngIf="user$ | async as user" class="my-squad-wrapper">
+  <!-- Левая колонка: карточка отряда -->
+  <div class="my-squad-card">
+    <ng-container *ngIf="!isFormVisible">
+      <div *ngIf="!squad">
+        Нет отряда? Вы можете
+        <a [routerLink]="['/squads']">подать заявку на вступление</a>
+        <div *ngIf="hasRole(user,'squad-commander')
+                 || hasRole(user,'staff-officer')
+                 || hasRole(user,'staff-commander')">
+          или <button type="button" (click)="showForm(false)">создать свой отряд</button>
+        </div>
+      </div>
+
+      <div *ngIf="squad">
+        <img src="assets/default-images/squad/squad.png" alt="Фото отряда">
+        <h2>{{ squad.name }}</h2>
+        <p>Общий рейтинг: {{ squad.score }}</p>
+        <p>Описание: {{ squad.description }}</p>
+        <button type="button" (click)="showForm(true)">Редактировать</button>
+      </div>
+    </ng-container>
+
+    <!-- Форма -->
+    <form *ngIf="isFormVisible" [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="photo-upload">
+        <ng-container *ngIf="squad; else placeholder">
+          <img src="assets/default-images/squad/squad.png" alt="Фото отряда">
+        </ng-container>
+        <ng-template #placeholder>
+          <div class="placeholder">Фото отряда</div>
+        </ng-template>
+        <button type="button">Загрузить новое фото</button>
+      </div>
+
+      <label>
+        Название:
+        <input formControlName="name">
+      </label>
+
+      <label>
+        Описание:
+        <textarea formControlName="description"></textarea>
+      </label>
+
+      <div class="form-actions">
+        <button type="submit">
+          {{ isEditing ? 'сохранить изменения' : 'создать отряд' }}
+        </button>
+        <button type="button" (click)="hideForm()">Отмена</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Правая колонка: командир и участники -->
+  <div class="my-squad-sidebar" *ngIf="squad">
+    <div class="commander" *ngIf="commander">
+      <span class="label">Командир:</span>
+      <a [routerLink]="['/users', commander.uuid]">{{ commander.name }} {{ commander.surname }}</a>
+    </div>
+
+    <span class="members">{{ squadMembers.length }} участников</span>
+    <div class="participants" *ngIf="squadMembers.length">
+      <ul class="participants-list">
+        <li *ngFor="let member of squadMembers" class="participant-item">
+          <div class="avatar">
+            {{ member.name.charAt(0) }}{{ member.surname.charAt(0) }}
+          </div>
+          <div class="info">
+            <span class="name">{{ member.name }} {{ member.surname }}</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>

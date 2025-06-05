@@ -1,0 +1,78 @@
+package ru.application.usermicroservice.services.implemetaions;
+
+import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.springframework.stereotype.Service;
+import ru.application.usermicroservice.domain.AdditionalUserData;
+import ru.application.usermicroservice.mappers.AdditionalUserDataMapper;
+import ru.application.usermicroservice.repositories.AdditionalUserDataRepository;
+import ru.application.usermicroservice.services.FighterAdditionalUserDataService;
+import ru.library.entitiesmodule.entities.user.AdditionalUserDataEntity;
+import ru.library.entitiesmodule.entities.user.enums.Gender;
+
+import java.util.Optional;
+import java.util.UUID;
+
+@Service
+@Transactional
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+public class FighterAdditionalUserDataServiceImpl implements FighterAdditionalUserDataService {
+
+    AdditionalUserDataRepository userDataRepository;
+
+    AdditionalUserDataMapper userDataMapper;
+
+
+    @Override
+    public AdditionalUserData create(
+            UUID userUuid
+    ) {
+        Optional<AdditionalUserDataEntity> optional = userDataRepository.findByUserUuid(userUuid);
+
+        if (optional.isEmpty()) {
+            AdditionalUserDataEntity userDataEntity = userDataRepository.save(
+                    AdditionalUserDataEntity.builder()
+                            .gender(Gender.MALE)
+                            .score(0.0)
+                            .userUuid(userUuid)
+                            .build()
+            );
+
+            return userDataMapper.toDomain(userDataEntity);
+        }
+
+        return userDataMapper.toDomain(optional.get());
+    }
+
+
+    @Override
+    public AdditionalUserData read(
+            UUID userUuid
+    ) {
+        return create(userUuid);
+    }
+
+
+    @Override
+    public AdditionalUserData update(
+            UUID userUuid,
+            AdditionalUserData newUserData
+    ) {
+        AdditionalUserData userData = create(userUuid);
+
+        return AdditionalUserData.builder()
+                .uuid(userData.getUuid())
+                .userUuid(userData.getUserUuid())
+                .squadUuid(newUserData.getSquadUuid() == null
+                        ? userData.getSquadUuid()
+                        : newUserData.getSquadUuid())
+                .gender(newUserData.getGender() == null
+                        ? userData.getGender()
+                        : newUserData.getGender())
+                .score(userData.getScore())
+                .build();
+    }
+}

@@ -1,0 +1,142 @@
+<app-snippet></app-snippet>
+
+<div class="other-profile" *ngIf="user$ | async as user">
+  <!-- Профиль пользователя -->
+  <div class="profile-card">
+    <div class="avatar">
+      {{ user?.name.charAt(0) }}{{ user?.surname.charAt(0) }}
+    </div>
+    <div class="details">
+      <h2>{{ user?.name }} {{ user?.surname }}</h2>
+      <p class="email" (click)="copyText(user?.email)">
+        {{ user?.email }}
+        <img alt=""
+             ngSrc="assets/profile/copy.png"
+             height="24"
+             width="24"
+        >
+      </p>
+      <p>Статус: {{ user?.role }}</p>
+      <p *ngIf="additionalUserData?.squadUuid
+      || squad?.commanderUuid === user?.uuid">
+        Отряд: <a [routerLink]="['/my-squad']"> {{ squad?.name }} </a>
+      </p>
+      <p>Личный рейтинг: {{ additionalUserData?.score }}</p>
+    </div>
+  </div>
+
+  <!-- Созданные мной события -->
+  <section class="events-section">
+    <h3 *ngIf="createdEvents?.length">Созданные события</h3>
+    <button class="create-new-event-button"
+            [routerLink]="['/new-event']"
+            *ngIf="hasRole(user, 'staff-officer') || hasRole(user, 'staff-commander')"
+    >
+      Создать событие
+    </button>
+    <div class="carousel-container" *ngIf="createdEvents?.length">
+      <button class="arrow arrow-left" (click)="scrollCreatedLeft()">
+        <img ngSrc="assets/profile/left.png" alt="Влево" height="16" width="16">
+      </button>
+
+      <div #createdList class="events-list">
+        <div *ngFor="let e of createdEvents"
+             class="event-card"
+             [routerLink]="['/event', e.uuid]"
+        >
+          <div class="event-image">
+            <img
+              [src]="environment.imageMap[categoryEvaluationMethods.get(e.categoryEvaluationMethodUuid)?.category.name]"
+            />
+          </div>
+          <div class="event-info">
+            <h4>{{ e.name }}</h4>
+            <p>Организатор: <a [routerLink]="['my-profile']">{{ user.name }}
+              {{ user.surname }}</a></p>
+            <p>Начало: {{ e.startAt | date: 'dd.MM.yy HH:mm' }}</p>
+            <p>Конец: {{ e.endAt   | date: 'dd.MM.yy HH:mm' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <button class="arrow arrow-right" (click)="scrollCreatedRight()">
+        <img ngSrc="assets/profile/right.png" alt="Вправо" height="16" width="16">
+      </button>
+    </div>
+  </section>
+
+  <!-- Запланированные события -->
+  <section class="events-section" *ngIf="userEvents?.length">
+    <h3>Запланированные события</h3>
+    <div class="carousel-container">
+      <button class="arrow arrow-left" (click)="scrollEventsLeft()">
+        <img ngSrc="assets/profile/left.png" alt="Влево" height="16" width="16">
+      </button>
+
+      <div #eventsList class="events-list">
+        <div *ngFor="let e of userEvents"
+             class="event-card"
+             [routerLink]="['/event', e.uuid]"
+        >
+          <div class="event-image">
+            <img
+              [src]="environment.imageMap[categoryEvaluationMethods.get(e.categoryEvaluationMethodUuid)?.category.name]"
+            />
+          </div>
+          <div class="event-info">
+            <h4>{{ e.name }}</h4>
+            <p>Организатор: <a [routerLink]="['/other-profile', e.authorUuid]">{{ authors.get(e.authorUuid)?.name }}
+              {{ authors.get(e.authorUuid)?.surname }}</a></p>
+            <p>Начало: {{ e.startAt | date: 'dd.MM.yy HH:mm' }}</p>
+            <p>Конец: {{ e.endAt   | date: 'dd.MM.yy HH:mm' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <button class="arrow arrow-right" (click)="scrollEventsRight()">
+        <img ngSrc="assets/profile/right.png" alt="Вправо" height="16" width="16">
+      </button>
+    </div>
+  </section>
+
+  <!-- Завершённые события -->
+  <section class="events-section" *ngIf="historyEvents?.length">
+    <h3>Завершённые события</h3>
+    <div class="carousel-container">
+      <button class="arrow arrow-left" (click)="scrollHistoryLeft()">
+        <img ngSrc="assets/profile/left.png" alt="Влево" height="16" width="16">
+      </button>
+
+      <div #historyList class="events-list">
+        <div *ngFor="let e of historyEvents"
+             class="event-card"
+             [routerLink]="['/event', e.uuid]"
+        >
+          <div class="event-image">
+            <img
+              [src]="environment.imageMap[categoryEvaluationMethods.get(e.categoryEvaluationMethodUuid)?.category.name]"
+            />
+          </div>
+          <div class="event-info">
+            <h4>{{ e.name }}</h4>
+            <p>Организатор: <a [routerLink]="e.authorUuid === user.uuid
+                  ? ['/my-profile']
+                  : ['/other-profile', e.authorUuid]">
+              {{ historyAuthors.get(e.authorUuid)?.name }}
+              {{ historyAuthors.get(e.authorUuid)?.surname }}</a></p>
+            <p>Начало: {{ e.startAt | date: 'dd.MM.yy HH:mm' }}</p>
+            <p>Конец: {{ e.endAt   | date: 'dd.MM.yy HH:mm' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <button class="arrow arrow-right" (click)="scrollHistoryRight()">
+        <img ngSrc="assets/profile/right.png" alt="Вправо" height="16" width="16">
+      </button>
+    </div>
+  </section>
+
+  <div *ngIf="showNotification" class="notification">
+    Почта скопирована!
+  </div>
+</div>

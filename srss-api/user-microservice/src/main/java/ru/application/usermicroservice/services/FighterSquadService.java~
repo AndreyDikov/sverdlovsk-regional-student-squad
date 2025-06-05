@@ -1,0 +1,4 @@
+package ru.application.usermicroservice.services;
+
+public interface FighterSquadService {
+}

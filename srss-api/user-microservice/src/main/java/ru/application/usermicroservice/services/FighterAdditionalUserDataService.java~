@@ -1,0 +1,10 @@
+package ru.application.usermicroservice.services;
+
+import ru.application.usermicroservice.domain.AdditionalUserData;
+
+import java.util.UUID;
+
+public interface FighterAdditionalUserDataService {
+    AdditionalUserData create(UUID userUuid);
+    AdditionalUserData read(UUID userUuid);
+}

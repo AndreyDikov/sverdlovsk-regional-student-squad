@@ -1,0 +1,11 @@
+select * from categories;
+
+create extension if not exists "uuid-ossp";
+
+insert into categories (uuid, name, users_coefficient, squads_coefficient)
+values (uuid_generate_v4(), 'Спорт', 19, 20),
+       (uuid_generate_v4(), 'Творческая работа', 23, 20),
+       (uuid_generate_v4(), 'Социальная работа', 10, 17),
+       (uuid_generate_v4(), 'Производственная работа', 13, 20),
+       (uuid_generate_v4(), 'Участие в мероприятиях', 20, 10),
+       (uuid_generate_v4(), 'Участие в мероприятиях штаба УрФУ', 26, 13);

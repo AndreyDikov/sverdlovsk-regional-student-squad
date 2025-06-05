@@ -1,0 +1,5 @@
+export enum EvaluationMethod {
+  PLACES = 'PLACES',
+  MAN_HOURS = 'MAN_HOURS',
+  ATTENDANCE = 'ATTENDANCE'
+}

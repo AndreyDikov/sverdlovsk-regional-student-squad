@@ -1,0 +1,95 @@
+package ru.application.eventmicroservice.services.impl;
+
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.springframework.stereotype.Service;
+import ru.application.eventmicroservice.domain.Event;
+import ru.application.eventmicroservice.mappers.EventMapper;
+import ru.application.eventmicroservice.repositories.CategoryEvaluationMethodRepository;
+import ru.application.eventmicroservice.repositories.EventRepository;
+import ru.application.eventmicroservice.services.StaffOfficerEventService;
+import ru.library.entitiesmodule.entities.event.EventEntity;
+import ru.library.entitiesmodule.entities.event.enums.EvaluationMethod;
+
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+public class StaffOfficerEventServiceImpl implements StaffOfficerEventService {
+
+    EventRepository eventRepository;
+    CategoryEvaluationMethodRepository categoryEvaluationMethodRepository;
+
+    EventMapper eventMapper;
+
+
+    @Override
+    public Event create(
+            UUID userUuid,
+            UUID categoryUuid,
+            EvaluationMethod evaluationMethod,
+            Event event
+    ) {
+        UUID categoryEvaluationMethodUuid = categoryEvaluationMethodRepository
+                .findByCategoryUuidAndEvaluationMethod(
+                        categoryUuid,
+                        evaluationMethod.name()
+                )
+                .getUuid();
+
+        event.setCategoryEvaluationMethodUuid(categoryEvaluationMethodUuid);
+        event.setAuthorUuid(userUuid);
+
+        EventEntity eventEntity = eventRepository.save(eventMapper.toEntity(event));
+
+        return eventMapper.toDomain(eventEntity);
+    }
+
+
+    @Override
+    public Event update(
+            UUID userUuid,
+            UUID categoryUuid,
+            EvaluationMethod evaluationMethod,
+            Event event
+    ) {
+        UUID categoryEvaluationMethodUuid = categoryEvaluationMethodRepository
+                .findByCategoryUuidAndEvaluationMethod(
+                        categoryUuid,
+                        evaluationMethod.name()
+                )
+                .getUuid();
+
+        EventEntity oldEventEntity = eventRepository.findById(event.getUuid()).orElseThrow();
+
+        Event oldEvent = eventMapper.toDomain(oldEventEntity);
+
+        EventEntity eventEntity = EventEntity.builder()
+                .uuid(event.getUuid())
+                .authorUuid(userUuid)
+                .categoryEvaluationMethodUuid(categoryEvaluationMethodUuid)
+                .name(add(event.getName(), oldEvent.getName()))
+                .description(add(event.getDescription(), oldEvent.getDescription()))
+                .startAt(add(event.getStartAt(), oldEvent.getStartAt()))
+                .endAt(add(event.getEndAt(), oldEvent.getEndAt()))
+                .place(add(event.getPlace(), oldEvent.getPlace()))
+                .averageRating(oldEvent.getAverageRating())
+                .numberUsers(oldEvent.getNumberUsers())
+                .build();
+
+        return eventMapper.toDomain(eventEntity);
+    }
+
+
+    @Override
+    public void deleteEventByUuid(UUID eventUuid) {
+        eventRepository.deleteById(eventUuid);
+    }
+
+
+    private static<T> T add(T data, T oldData) {
+        return data == null ? oldData : data;
+    }
+}
