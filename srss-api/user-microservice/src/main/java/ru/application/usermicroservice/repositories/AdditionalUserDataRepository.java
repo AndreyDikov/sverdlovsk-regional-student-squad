@@ -11,8 +11,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface AdditionalUserDataRepository
-        extends JpaRepository<AdditionalUserDataEntity, UUID> {
+public interface AdditionalUserDataRepository extends JpaRepository<AdditionalUserDataEntity, UUID> {
 
     @Modifying
     @Query(value = """

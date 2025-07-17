@@ -8,8 +8,7 @@ import ru.library.entitiesmodule.entities.event.CategoryEvaluationMethodEntity;
 import java.util.UUID;
 
 @Repository
-public interface CategoryEvaluationMethodRepository
-        extends JpaRepository<CategoryEvaluationMethodEntity, UUID> {
+public interface CategoryEvaluationMethodRepository extends JpaRepository<CategoryEvaluationMethodEntity, UUID> {
 
     @Query(value = """
         select * from categories_evaluation_methods
